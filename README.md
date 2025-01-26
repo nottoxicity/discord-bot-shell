@@ -30,7 +30,7 @@
 ### Nuking Commands
 - **`nuke <args>`**: Execute the 'nuke' command for a specific target (be cautious!).
 #### Example usage
-- **`nuke -c 10 -m "@everyone Nuked by ..." -s "Nuked by ..." -f 5
+- **`nuke -c 10 -m "@everyone Nuked by ..." -s "Nuked by ..." -f 5`**
 - `-c` - create X channels `-m` - flood message `-s` - server name `-f` flood ammount 
 ### Help
 - **`help`**: Display this help message.
