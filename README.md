@@ -1,6 +1,4 @@
-# Bot Command Line Interface (CLI)
-
-This repository contains a bot with a command-line interface (CLI) for managing and interacting with a Discord server. The bot provides a wide range of commands for server management, member interactions, and server information.
+# Discord Bot Shell (CLI)
 
 ## Available Commands
 
@@ -35,7 +33,8 @@ This repository contains a bot with a command-line interface (CLI) for managing 
 ### Help
 - **`help`**: Display this help message.
 
-
+### Install
+- To install clone this repository and install all the required packages using `pip install -r requirements.txt`. Then run the code with `python3 app.py`.
 ## Contributing
 
 Feel free to submit issues, fork the repository, and create pull requests to improve the bot. If you have any suggestions or improvements, please open an issue.
