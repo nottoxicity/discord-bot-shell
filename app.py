@@ -4,7 +4,7 @@ from cmd import Cmd
 from colorama import Fore, Style, init
 import asyncio
 import re
-
+import aioconsole
 init(autoreset=True)
 
 
@@ -34,19 +34,25 @@ class DiscordBotCLI(Cmd):
             print(f"{Fore.GREEN}- {guild.name} (ID: {guild.id}){Style.RESET_ALL}")
 
     async def do_connect(self, args):
-        """Connect to a specific server by name. Usage: connect <server_name>"""
-        server_name = args.strip()
-        if not server_name:
-            print(f"{Fore.RED}Error: You must provide a server name. Usage: connect <server_name>{Style.RESET_ALL}")
+        """Connect to a specific server by guild ID. Usage: connect <guild_id>"""
+        try:
+            guild_id = int(args.strip())  # Convert the provided ID to an integer
+        except ValueError:
+            print(f"{Fore.RED}Error: You must provide a valid guild ID. Usage: connect <guild_id>{Style.RESET_ALL}")
+            return
+
+        if not guild_id:
+            print(f"{Fore.RED}Error: You must provide a server ID. Usage: connect <guild_id>{Style.RESET_ALL}")
             return
 
         for guild in self.bot.guilds:
-            if guild.name.lower() == server_name.lower():
+            if guild.id == guild_id:
                 self.connected_server = guild
                 print(f"{Fore.GREEN}Connected to server: {guild.name}{Style.RESET_ALL}")
                 self.prompt = f"{Fore.CYAN}{guild.name} > {Style.RESET_ALL}"
                 return
-        print(f"{Fore.RED}Error: Server '{server_name}' not found.{Style.RESET_ALL}")
+
+        print(f"{Fore.RED}Error: Server with ID '{guild_id}' not found.{Style.RESET_ALL}")
 
     async def do_nuke(self, args):
         """Nuke the server with options for kicking members, flooding with messages, and creating new channels, etc."""
@@ -399,23 +405,20 @@ class DiscordBotCLI(Cmd):
         print(f"{Fore.YELLOW}- connect <server_name>{Style.RESET_ALL}: Connect to a specific server by its name.")
         print(f"{Fore.YELLOW}- channels{Style.RESET_ALL}: List all text channels in the connected server.")
         print(f"{Fore.YELLOW}- join <channel_id>{Style.RESET_ALL}: Join a channel using its ID.")
-        print(
-            f"{Fore.YELLOW}- messages <limit>{Style.RESET_ALL}: Show recent messages in the connected channel (limit to a specified number).")
         print(f"{Fore.YELLOW}- send <message>{Style.RESET_ALL}: Send a message to the currently connected channel.")
         print(f"{Fore.YELLOW}- admins{Style.RESET_ALL}: List all admins in the connected server.")
         print(f"{Fore.YELLOW}- info{Style.RESET_ALL}: Display information about the bot and the connected server.")
         print(f"{Fore.YELLOW}- quit{Style.RESET_ALL}: Exit the CLI and stop the bot.")
         print(f"{Fore.YELLOW}- members{Style.RESET_ALL}: List all members in the connected server.")
         print(
-            f"{Fore.YELLOW}- nuke <target>{Style.RESET_ALL}: Execute the 'nuke' command for a specific target (be cautious!).")
+            f"{Fore.YELLOW}- nuke <args>{Style.RESET_ALL}: Execute the 'nuke' command with specified arguments.")
         print(f"{Fore.YELLOW}- invite{Style.RESET_ALL}: Generate an invite link for the bot.")
         print(f"{Fore.YELLOW}- messages <channel_id>{Style.RESET_ALL}: Fetch recent messages from a specific channel.")
         print(f"{Fore.YELLOW}- ban <user_id>{Style.RESET_ALL}: Ban a user from the connected server by their user ID.")
         print(
             f"{Fore.YELLOW}- unban <user_id>{Style.RESET_ALL}: Unban a user from the connected server by their user ID.")
-        print(f"{Fore.YELLOW}- message_count <channel_id>{Style.RESET_ALL}: Count the number of messages in a channel.")
         print(
-            f"{Fore.YELLOW}- clear <limit>{Style.RESET_ALL}: Clear recent messages (limit specifies how many to clear).")
+            f"{Fore.YELLOW}- clear <channel_id> <number_of_messages>{Style.RESET_ALL}: Clear recent messages (limit specifies how many to clear).")
         print(f"{Fore.YELLOW}- ping{Style.RESET_ALL}: Check the bot's responsiveness.")
         print(f"{Fore.YELLOW}- roles{Style.RESET_ALL}: List all roles available in the connected server.")
         print(f"{Fore.YELLOW}- help{Style.RESET_ALL}: Display this help message.")
@@ -443,21 +446,8 @@ class DiscordBotCLI(Cmd):
 
         invite = await self.connected_server.text_channels[0].create_invite(max_uses=1, unique=True)
         print(f"{Fore.GREEN}Invite Link for '{self.connected_server.name}': {invite.url}{Style.RESET_ALL}")
-    async def do_messages(self, args):
-        """Show recent messages in the connected channel. Usage: messages <limit>"""
-        if not self.connected_channel:
-            print(f"{Fore.RED}Error: You must join a channel first using 'join <channel_id>'.{Style.RESET_ALL}")
-            return
 
-        limit = int(args.strip()) if args.strip().isdigit() else 5
-        print(f"{Fore.YELLOW}Fetching the last {limit} messages in channel '{self.connected_channel.name}'...{Style.RESET_ALL}")
 
-        async def fetch_messages():
-            messages = await self.connected_channel.history(limit=limit).flatten()
-            for message in messages:
-                print(f"{Fore.CYAN}[{message.created_at}] {message.author.name}: {message.content}{Style.RESET_ALL}")
-
-        await fetch_messages()
     async def cmdloop(self):
         """Run the command loop asynchronously."""
         loop = asyncio.new_event_loop()
@@ -465,7 +455,7 @@ class DiscordBotCLI(Cmd):
         while True:
             try:
 
-                command = input(self.prompt)
+                command = await aioconsole.ainput(self.prompt)
                 if command == "quit":
                     break
                 else:
@@ -548,7 +538,7 @@ async def on_ready():
 ██████╔╝██║███████║╚██████╗╚██████╔╝██║  ██║██████╔╝    ██████╔╝╚██████╔╝   ██║       
 ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝     ╚═════╝  ╚═════╝    ╚═╝       
                                                                                       
-███████╗██╗  ██╗███████╗██╗     ██╗       Made by @probablynottoxicity                                              
+███████╗██╗  ██╗███████╗██╗     ██╗        Made by @probablynottoxicity                                           
 ██╔════╝██║  ██║██╔════╝██║     ██║                                                   
 ███████╗███████║█████╗  ██║     ██║                                                   
 ╚════██║██╔══██║██╔══╝  ██║     ██║                                                   
@@ -566,4 +556,4 @@ async def on_ready():
 
 
 
-bot.run("your bot token")
+bot.run("")
